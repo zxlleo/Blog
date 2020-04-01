@@ -9,7 +9,7 @@
 
 <center>
 
-![函数防抖](imgs/函数防抖.jpg '函数防抖')
+![函数防抖](https://github.com/zxlleo/Blog/blob/master/imgs/%E5%87%BD%E6%95%B0%E8%8A%82%E6%B5%81.jpg)
 
 </center>
 
