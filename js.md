@@ -113,3 +113,139 @@ window.addEventListener('scroll', throttle(handle, 1000))
 | every()  |   ES5-   |    同forEach，同时回调函数返回布尔</br>值，全部为true，由every返回true	    |       n        |
 | some()  |   ES5-   |    同forEach，同时回调函数返回布尔</br>值，只要由一个为true，由some返回true	    |       n        |
 | reduce()  |   ES5-   |    归并，同forEach，迭代数组的所有</br>项，并构建一个最终值，由reduce返回	    |       n        |
+
+# 对象拷贝
+## 浅拷贝
+
+
+## 深拷贝
+```js
+// vue router使用
+function clone (value) {
+  if (Array.isArray(value)) {
+    return value.map(clone) // 递归数组
+  } else if (value && typeof value === 'object') {
+    const res = {}
+    for (const key in value) {
+      res[key] = clone(value[key])
+    }
+    return res
+  } else {
+    return value
+  }
+}
+```
+
+# Vue 换场动画实现
+
+> 用数组实现一个路由栈，管理路由的进出
+```js
+// ./router/Histroy.js
+
+import storage from 'good-storage'
+export default class History {
+  constructor() {
+    // 设置缓存，解决从其他路由回到单页面应用后，路由栈清空了
+    let cache = storage.session.get('routeCache')
+    this.stack = cache || []
+  }
+
+  push(path) {
+    this.stack.push(path)
+    this.setCache()
+  }
+
+  find(path) {
+    return this.stack.indexOf(path)
+  }
+
+  cutOff(index) {
+    this.stack.splice(index)
+    this.setCache()
+  }
+
+  setCache() {
+    storage.session.set('routeCache', this.stack)
+  }
+}
+```
+
+> 通过全局后置钩子，如果路由栈里找到了路由，说明是返回，动画右滑；没有找到说明是新加，动画左滑
+```js
+// ./router/index.js
+
+import Vue from 'vue'
+import Router from 'vue-router'
+import History from './History'
+import routes from './routes'
+
+Vue.use(Router)
+
+let router = new Router({
+  routes
+})
+
+let history = new History()
+router.stack = history.stack
+router.direction = '' // 动画方向
+
+router.afterEach((to, from) => {
+  if (!to.path) return
+
+  // 首次进入，无动画
+  if (from.path === '/') {
+    history.push(to.path)
+    router.direction = ''
+    return
+  }
+
+  const index = history.find(to.path)
+  if (index !== -1) {
+    router.direction = 'slide-right'
+    history.cutOff(index + 1)
+  } else {
+    router.direction = 'slide-left'
+    history.push(to.path)
+  }
+})
+
+export default router
+```
+
+> 入口的 transition 使用后添加的`router`属性 `direction`
+```js
+// ./App.vue
+<template>
+  <div id="app">
+    <transition :name="$router.direction">
+      <router-view class="view"></router-view>
+    </transition>
+  </div>
+</template>
+<style lang="less" scope>
+#app {
+  width: 100%;
+  height: 100%;
+  background-color: #f9f9f9;
+}
+
+.view {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  min-height: 100%;
+  transition: all 0.3s cubic-bezier(0.51, 0.18, 0.31, 0.99);
+}
+
+.slide-left-enter,
+.slide-right-leave-active {
+  -webkit-transform: translate(100%, 0);
+  transform: translate(100%, 0);
+}
+.slide-left-leave-active,
+.slide-right-enter {
+  -webkit-transform: translate(-100%, 0);
+  transform: translate(-100%, 0);
+}
+</style>
+```
