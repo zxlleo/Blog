@@ -2,7 +2,7 @@
 
 <center>
 
-![this指向](imgs/this.jpg 'this指向')
+![this指向](https://github.com/zxlleo/Blog/blob/master/imgs/this.jpg 'this指向')
 
 </center>
 
@@ -14,7 +14,7 @@
 
 <center>
 
-![函数防抖](imgs/函数防抖.jpg '函数防抖')
+![函数防抖](https://github.com/zxlleo/Blog/blob/master/imgs/函数防抖.jpg '函数防抖')
 
 </center>
 
@@ -41,7 +41,7 @@ window.addEventListener('scroll', debounce(handle, 1000))
 
 <center>
 
-![函数节流](imgs/函数节流.jpg '函数节流')
+![函数节流](https://github.com/zxlleo/Blog/blob/master/imgs/函数节流.jpg '函数节流')
 
 </center>
 
