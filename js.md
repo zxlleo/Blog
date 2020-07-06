@@ -314,3 +314,87 @@ HTTP请求报文由**请求行**（request line）、**请求头部**（header�
 ![http 报文结构](https://github.com/zxlleo/Blog/blob/master/imgs/http报文.png "http 报文结构")
 
 ![http 请求报文](https://github.com/zxlleo/Blog/blob/master/imgs/http请求报文.png "http 请求报文")
+
+
+# 最大余额法——百分比计算
+
+> 保证所有项加起来为100%<br>
+
+以下通过一组例子数据来<br>
+数据值列表：[2, 4, 3]<br>
+精度：2（代表百分数的值最多保留2位小数）<br>
+期望结果: [ 22.22, 44.45, 33.33 ]<br>
+```js
+/**
+ *
+ * 给定一个精度值，计算某一项在一串数据中占据的百分比，确保百分比总和是1（100%）
+ * 使用最大余额法
+ * Get a data of given precision, assuring the sum of percentages
+ * in valueList is 1.
+ * The largest remainer method is used.
+ * https://en.wikipedia.org/wiki/Largest_remainder_method
+ *
+ * @param {Array.<number>} valueList a list of all data 一列数据
+ * @param {number} idx index of the data to be processed in valueList 索引值（数组下标）
+ * @param {number} precision integer number showing digits of precision 精度值
+ * @return {number} percent ranging from 0 to 100 返回百分比从0到100
+ */
+function getPercentWithPrecision (valueList, idx, precision) {
+  if (!valueList[idx]) {
+    return 0
+  }
+
+  var sum = valueList.reduce(function (acc, val) {
+    return acc + (isNaN(val) ? 0 : val)
+  }, 0)
+  if (sum === 0) {
+    return 0
+  }
+  console.log('sum', sum)
+  // sum 9
+  var digits = Math.pow(10, precision) // digits 100
+  console.log('digits', digits)
+  var votesPerQuota = valueList.map(function (val) {
+    return (isNaN(val) ? 0 : val) / sum * digits * 100 // 扩大比例，这样可以确保整数部分是已经确定的议席配额，小数部分是余额
+  })
+  console.log('votesPerQuota', votesPerQuota)
+  // votesPerQuota [ 2222.222222222222, 4444.444444444444, 3333.333333333333 ] 每一个项获得的议席配额，整数部分是已经确定的议席配额，小数部分是余额
+  var targetSeats = digits * 100 // targetSeats 10000 全部的议席
+  console.log('targetSeats', targetSeats)
+  var seats = votesPerQuota.map(function (votes) {
+    // Assign automatic seats.
+    return Math.floor(votes)
+  })
+  console.log('seats', seats)
+  // seats [ 2222, 4444, 3333 ] 获取配额的整数部分
+  var currentSum = seats.reduce(function (acc, val) {
+    return acc + val
+  }, 0)
+  console.log('currentSum', currentSum)
+  // 9999 表示已经配额了9999个议席，还剩下一个议席
+  var remainder = votesPerQuota.map(function (votes, idx) {
+    return votes - seats[idx]
+  })
+  console.log('remainder', remainder)
+  // [ 0.2222222222221717, 0.4444444444443434, 0.33333333333303017 ]得到每一项的余额
+  // Has remainding votes. 如果还有剩余的坐席就继续分配
+  while (currentSum < targetSeats) {
+    // Find next largest remainder. 找到下一个最大的余额
+    var max = Number.NEGATIVE_INFINITY
+    var maxId = null
+    for (var i = 0, len = remainder.length; i < len; ++i) {
+      if (remainder[i] > max) {
+        max = remainder[i]
+        maxId = i
+      }
+    }
+    // max: 0.4444444444443434, maxId 1
+    // Add a vote to max remainder.
+    ++seats[maxId] // 第二项，即4的占比的坐席增加1
+    remainder[maxId] = 0
+    ++currentSum // 总的已分配的坐席数也加1
+  }
+
+  return seats[idx] / digits
+}
+```
